@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sound Project</title>
+
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="frontend/bootstrap/css/bootstrap.min.css">
+
+
+</head>
+
+<body style="background-image: url('frontend/stonehaven.png');">
+
+    <div class="container">
+        <div style="background: white;" class="col-12 col-md-8 col-lg-6 m-1 p-3 mx-auto border rounded my-md-5">
+            <img class="mx-auto d-block w-25 h-25 my-2" src="frontend/ledschatIcon.png" id="logo" />
+            <p class="my-2">1. Select your sound source</p>
+            <div class="row pr-1 my-1">
+                <div class="row col-12 m-2">
+                    <button class="btn btn-info mr-2" type="button" id="micro">Use Microphone</button>
+                    <div class="m-2 form-check">
+                        <input class="form-check-input" type="checkbox" id="microOutput" value="start">
+                        <label class="form-check-label" for="microOutput">Play it</label>
+                    </div>
+                </div>
+                <div class="col-12 m-2">
+                    <div id="fileSettings" class="input-group">
+                        <div>
+                            <button class="btn btn-info" id="fileGo" type="button">Upload</button>
+                        </div>
+                        <div class="custom-file p-1">
+                            <input type="file" class="custom-file-input" id="fileInput">
+                            <label class="custom-file-label" for="fileInput">Choose file</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12" style="display: none;" id="progressDiv" >
+                        <div class="progress my-2">
+                            <div id="progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="my-2">2. Choose an effect</p>
+
+
+                <div class="col-12 p-2 row d-flex justify-content-center no-wrap">
+                    <button class="col-lg-5 col-md-5 col-sm-6 btn btn-info btn-sm m-1 " type="button" id="wave"><font size="2">Sound Wave</font></button>
+
+                    <button class="col-lg-5 col-md-5 col-sm-6 btn btn-info btn-sm m-1" type="button" id="freqSpec"><font size="2">Frequency Spectrum</font></button>
+
+                    <button class="col-lg-5 col-md-5 col-sm-6 btn btn-info btn-sm m-1" type="button" id="oscilloscope"><font size="2">Oscilloscope</font></button>
+
+                    <button class="col-lg-5 col-md-5 col-sm-6 btn btn-muted btn-sm m-1" type="button" id="none"><font size="2">No effect</font></button>
+                </div>
+
+            <p class="my-2">3. Set the ambiance </p>
+            <div class="my-1">
+                    <div class="col-12 row d-sm-flex justify-content-between align-items-baseline no-wrap">
+                        <p class="col-12 mr-2 my-2">color</p>
+                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 terracota" type="button">Terracota</button>
+                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 multicolor" type="button">Multicolor</button>
+                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 party" type="button">Party</button>
+                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 lounge" type="button">Lounge</button>
+                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 sunrise" type="button">Sunrise</button>
+                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 neonite" type="button">Neonite</button>
+                    </div>
+                    <div class="col-12 row d-sm-flex justify-content-around align-items-baseline">
+                        <p class="col-12 mr-2 my-2">background</p>
+                        <button class="col-lg-4 col-md-4 col-sm-6 btn btn-light btn-sm  mozaiqueBack" type="button">Mozaique</button>
+                        <button class="col-lg-4 col-md-4 col-sm-6 btn btn-light btn-sm  starsBack" type="button">stars</button>
+                        <button class="col-lg-4 col-md-4 col-sm-6 btn btn-light btn-sm  noeffectBack" type="button">None</button>
+                    </div>
+                    <div class="col-12 row d-sm-flex justify-content-between align-items-baseline wrap">
+                        <p class="col-lg-5 col-md-5 col-sm-12 mr-2 my-2">Number of lines</p>
+                        <select class="form-control form-control-sm col-lg-5 col-md-5 col-sm-12 " id="freqNum">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                </div>
+            <button class="btn btn-lg align-self-start btn-warning mt-2 ml-2" type="button" id="soundSetting" value="started">Pause</button>
+        </div>
+    </div>
+    <!-- bootstrap module -->
+    <script src="frontend/bootstrap/jquery-3.3.1.slim.min.js"></script>
+    <script src="frontend/bootstrap/js/bootstrap.min.js"></script>
+    <!-- LedsChat modules -->
+    <script src="socketio/socket.io.js"></script>
+    <script src="js/web.js"></script>
+    <script src="js/frontEnd.js"></script>
+
+    <script>
+
+        var freqNumInput = document.querySelector('#freqNum');
+        var progressDiv = document.querySelector('#progressDiv');
+        var soundSetting = document.querySelector('#soundSetting');
+        var microOutputOn = document.getElementById('microOutputOn');
+        var microOutputOff = document.getElementById('microOutputOff');
+        
+        // Sources
+        
+        // Set micro as the source
+        document.getElementById('micro').onclick = () => {
+            webrtc.send({
+                cmd: 'microSource',
+                arg: 'start'
+            });
+        }
+
+        // Play microphone sound on the speakers
+        microOutput.onchange = () => {
+            if (microOutput.checked) {
+                webrtc.send({
+                    cmd: 'microOutput',
+                    arg: 'start'
+                }); 
+            } else {
+                webrtc.send({
+                    cmd: 'microOutput',
+                    arg: 'stop'
+                }); 
+            }
+        }
+
+        // Set audio file as the source
+        document.getElementById('fileGo').onclick = () => {
+            var fileInput = document.getElementById('fileInput').files[0];
+            if (fileInput != undefined){
+            progressDiv.style.display = 'block';
+            var progress = document.getElementById("progress")
+
+            document.querySelector('#fileSettings').style.visibility = 'hidden';
+            }
+            uploadFile(fileInput, () => {
+                
+                webrtc.send({
+                    cmd: 'fileEnd'
+                });
+            });
+        };
+        
+        
+        function uploadFile(file, callback) {
+
+            webrtc.send({
+                cmd: 'fileStart',
+                arg: file.size
+            });
+
+            var CHUNK_SIZE = 5120;
+            var offset = 0;
+            var fr = new FileReader();
+            fr.onload = function () {
+
+                webrtc.send({
+                    cmd: 'filePart',
+                    arg: fr.result
+                });
+
+                var offsetPercentage = 0;
+                offset += CHUNK_SIZE;
+                offsetPercentage += Math.round((offset * 100) / file.size);
+                console.log(offsetPercentage);
+
+
+                progress.setAttribute("aria-valuenow", offsetPercentage);
+                progress.style.width = offsetPercentage + "%";
+                if (offsetPercentage === 100) {
+                    progress.style.width ="0";
+                    progressDiv.style.display = 'none';
+                    document.querySelector('#fileSettings').style.visibility = 'visible';
+                }
+
+                seek();
+            };
+            fr.onerror = function () {
+                // Cannot read file... Do something, e.g. assume column size = 0.
+                callback(0);
+            };
+            seek();
+
+            function seek() {
+                if (offset >= file.size) {
+                    // progress.setAttribute("aria-valuenow", 0);       
+                    callback(file.size);
+                    return;
+
+                }
+
+                var slice = file.slice(offset, offset + CHUNK_SIZE);
+                fr.readAsArrayBuffer(slice);
+            }
+        }
+
+
+        // Play/pause button
+        soundSetting.onclick = () => {
+            soundSetting.classList.toggle("btn-success");
+            soundSetting.classList.toggle("btn-warning");
+
+            if (soundSetting.value === 'started') {
+                soundSetting.value = 'paused';
+                soundSetting.textContent = 'Play';
+                webrtc.send({
+                    cmd: 'soundSetting',
+                    arg: 'pause',
+                });
+            } else {
+                soundSetting.value = 'started';
+                soundSetting.textContent = 'Pause';
+                webrtc.send({
+                    cmd: 'soundSetting',
+                    arg: 'start'
+                });
+            }
+        }
+
+
+        // Effects
+
+        document.querySelector('#oscilloscope').onclick = () => {
+            freqNumInput.setAttribute("disabled", "");
+            
+            
+            webrtc.send({
+                cmd: 'effect',
+                arg: 'oscilloscope'
+            });
+        }
+
+        document.querySelector('#none').onclick = () => {
+            freqNumInput.setAttribute("disabled", "");
+
+            webrtc.send({
+                cmd: 'effect',
+                arg: 'noeffect'
+            });
+        }
+
+        document.querySelector('#wave').onclick = () => {
+            freqNumInput.setAttribute("disabled", "");
+            
+            webrtc.send({
+                cmd: 'effect',
+                arg: 'wave'
+            });
+        }
+
+        document.querySelector('#freqSpec').onclick = () => {
+            freqNumInput.removeAttribute('disabled');
+            
+            webrtc.send({
+                cmd: 'effect',
+                arg: 'freq'
+            });
+        }
+
+        // Effects parameters
+        document.querySelector('.mozaiqueBack').onclick = () => {
+                webrtc.send({
+                    cmd: 'effectback',
+                    arg: 'mozaique',
+                });
+            }
+        
+        document.querySelector('.noeffectBack').onclick = () => {
+                webrtc.send({
+                    cmd: 'effectback',
+                    arg: 'noeffectback'
+                });
+            }
+
+        document.querySelector('.starsBack').onclick = () => {
+                webrtc.send({
+                    cmd: 'effectback',
+                    arg: 'starz'
+                });
+            }
+
+        freqNum.onchange = () => {
+            var freqNumStr = freqNumInput.value;
+            freqNum = parseInt(freqNumStr, 10);
+            webrtc.send({
+                cmd: 'freqNumber',
+                arg: freqNum
+            });
+        }
+
+        document.querySelector('.multicolor').onclick = () => {
+                
+            webrtc.send({
+                cmd: 'color',
+                arg: 'multi'
+            });
+    
+        }
+
+        document.querySelector('.terracota').onclick = () => {
+                
+            webrtc.send({
+                cmd: 'color',
+                arg: 'terra'
+            });
+            
+        }
+
+        document.querySelector('.party').onclick = () => {
+                
+            webrtc.send({
+                cmd: 'color',
+                arg: 'party'
+            });
+            
+        }
+
+
+        document.querySelector('.lounge').onclick = () => {
+                
+            webrtc.send({
+                cmd: 'color',
+                arg: 'lounge'
+            });
+            
+        }
+
+        document.querySelector('.sunrise').onclick = () => {
+                
+            webrtc.send({
+                cmd: 'color',
+                arg: 'sunrise'
+            });
+                
+        }
+        document.querySelector('.neonite').onclick = () => {
+                
+            webrtc.send({
+                cmd: 'color',
+                arg: 'neonite'
+            });
+                
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+
+{
+	"name" : "Mosaic Sound",
+	"description": "this is the application to project sound visualization",
+	"icon":"icon.png",
+
+	"app" : 
+	{
+		"type" : "change",
+		"id"   : "Streaming with interpolation"
+	},
+
+	"com" : 
+	{
+		"type" : "html5",
+		"page"   : "index.html",
+		"frontEnd" : 
+		{
+			"page" : "gui.html",
+			"public" : "public"
+		}
+	}
+}

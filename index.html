@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Sound Project Production</title>
+
+    <style>
+        body {
+            background: black;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- p5 library scripts -->
+    <script src="p5/p5.min.js"></script>
+    <script src="p5/addons/p5.dom.min.js"></script>
+    <script src="p5/addons/p5.sound.min.js"></script>
+
+
+    <script>
+        // LedsChat modules
+        let ledschat = require('ledschat');
+        let fs = require('fs');
+        let webrtc = new ledschat.WebRTC();
+        let path = require('path');
+
+        var effect = 'a'
+        // freq spectrum variables
+        var mic, fft, sound;
+        var amplitude;
+
+        var prevLevels = new Array(60);
+        var myColor;
+        var ratio = 1.78125;
+        var freqNumber = 1;
+        var currentSource = 'mic';
+        var effectback;
+        var binCount = 1024;
+        var audioGrab;
+        var stars = [],
+            WIDTH = 80,
+            HEIGHT = 80,
+            FPS = 50, // Frames per second
+            NUM_STARS = 100; // Number of stars
+        // variables pour les pallette de couleur 
+        let colorSchemes;
+        var hueValue;
+        var currentColor;
+        var r, g, b;
+        // function pour les differente pallette de couleur
+        function colorToRGB(hue, sat, value, id) {
+            let colorScheme = colorSchemes[id];
+
+            let nbColors = colorScheme.length;
+
+            let size = (0xFF + 1) / nbColors;
+
+            let ti = Math.floor(hue / size) % nbColors;
+            
+            let f = ((hue / size) % nbColors) - ti;
+
+            let high = value;
+            let low = value * (0xFF - sat) / 0xFF;
+
+            let beginRed = map(colorScheme[ti].r, 0, 0xFF, low, high);
+            let endRed = map(colorScheme[(ti + 1) % nbColors].r, 0, 0xFF, low, high);
+
+            let newRed = (endRed - beginRed) * f + beginRed;
+
+            let beginGreen = map(colorScheme[ti].g, 0, 0xFF, low, high);
+            let endGreen = map(colorScheme[(ti + 1) % nbColors].g, 0, 0xFF, low, high);
+
+            let newGreen = (endGreen - beginGreen) * f + beginGreen;
+
+            let beginBlue = map(colorScheme[ti].b, 0, 0xFF, low, high);
+            let endBlue = map(colorScheme[(ti + 1) % nbColors].b, 0, 0xFF, low, high);
+
+            let newBlue = (endBlue - beginBlue) * f + beginBlue;
+
+            return {
+                r: newRed,
+                g: newGreen,
+                b: newBlue
+            };
+        }
+
+        var colorPanel = 3;
+
+
+        function setup() {
+
+            colorSchemes = [
+            [ // Terracota scheme pallette de couleur
+                {r: 0x00, g: 0x30, b: 0x49},
+                {r: 0xD6, g: 0x28, b: 0x28},
+                {r: 0xF7, g: 0x7F, b: 0x00},
+                {r: 0xFC, g: 0xBF, b: 0x49},
+                {r: 0xEA, g: 0xE2, b: 0xB7}
+            ],
+            [ // HSV scheme pallette de couleur
+                {r: 0xFF, g: 0x00, b : 0x00},
+                {r: 0xFF, g: 0xFF, b : 0x00},
+                {r: 0x00, g: 0xFF, b : 0x00},
+                {r: 0x00, g: 0xFF, b : 0xFF},
+                {r: 0x00, g: 0x00, b : 0xFF},
+                {r: 0xFF, g: 0x00, b : 0xFF},
+            ],
+            [ // Party pallette de couleur
+                {r: 0x0F, g: 0xA3, b : 0xB1},
+                {r: 0xEE, g: 0x6C, b : 0x4D},
+                {r: 0xF3, g: 0x8D, b : 0x68},
+                {r: 0x84, g: 0x56, b : 0xA7},
+                {r: 0xDA, g: 0xE5, b : 0x39},
+            ],
+            [ // Lounge pallette de couleur
+                {r: 0xCC, g: 0xDB, b : 0xBC},
+                {r: 0x80, g: 0xCE, b : 0xD7},
+                {r: 0x63, g: 0xC7, b : 0xB2},
+                {r: 0x8E, g: 0x6C, b : 0x88},
+                {r: 0x0D, g: 0x5E, b : 0x70},
+                
+            ],
+            [ // Sunrise pallette de couleur
+                {r: 0xE3, g: 0xFF, b : 0x00},
+                {r: 0xFF, g: 0x8D, b : 0x00},
+                {r: 0xFF, g: 0x4D, b : 0x00},
+                {r: 0xFF, g: 0x00, b : 0x00},
+                {r: 0xE1, g: 0x00, b : 0x00},
+                
+            ],
+            [ // Neonite pallette de couleur
+                {r: 0x00, g: 0xEE, b : 0xEE},
+                {r: 0x00, g: 0xFF, b : 0x99},
+                {r: 0xFF, g: 0x99, b : 0x00},
+                {r: 0x99, g: 0xFF, b : 0x00},
+                {r: 0x99, g: 0x00, b : 0xFF},
+                
+            ],
+
+
+        ];
+
+            prevLevels.fill(0)
+
+            var cnv = createCanvas(window.innerWidth, window.innerHeight);
+            noFill();
+            noStroke();
+
+            // freq spectrum setup
+            mic = new p5.AudioIn();
+            fft = new p5.FFT();
+
+            // waveform setup
+            amplitude = new p5.Amplitude();
+            rectMode(CENTER);
+            amplitude.smooth(0.6);
+
+
+            // background setup
+            strokeWeight(0.25);
+            strokeCap(SQUARE);
+            for (var i = 0; i < NUM_STARS; i++) {
+                stars.push({
+                    x: 0,
+                    y: 0,
+                    offset: Math.random() * 360,
+                    // Weight orbit a little to be outside origin
+                    orbit: (Math.random() + 0.01) * max(WIDTH, HEIGHT),
+                    radius: Math.random() * 2,
+                    vx: Math.floor(Math.random() * 10) - 5,
+                    vy: Math.floor(Math.random() * 10) - 5
+                });
+            }
+
+            frameRate(FPS);
+            loop();
+
+            return myColor;
+
+        }
+
+
+        function draw() {
+            background(0);
+            // function draw pour les animation du background
+
+            if (effectback === 'noeffectback') {
+                clear();
+            } else if (effectback === 'mozaique') {
+                var size = 10;
+                var offset = size * ratio;
+                for (var x = 0; x <= width + size; x += size * 2) {
+                    for (var y = 0; y <= height + offset; y += offset) {
+                        var x0 = 0;
+                        if (y % (offset * 2) == 0) {
+                            noStroke();
+                            fill('rgba(255,255,255,0.25)');
+                            x0 = size;
+                        } else {
+                            noStroke();
+                            fill('rgba(166,166,166,0.25)');
+                            xo = 0;
+                        }
+
+                        makeHex(x + x0, y, size);
+                    }
+                }
+            } else if (effectback === 'starz') {
+                push();
+                noFill();
+                stroke("white");
+                strokeCap(ROUND);
+                strokeWeight(0.5);
+                for (var i = 0, x = stars.length; i < x; i++) {
+                    var s = stars[i];
+                    ellipse(s.x, s.y, s.radius, 0);
+                }
+                pop();
+                update();
+            }
+
+
+
+            //function draw pour les animation liées au son
+            if (effect === 'noeffect') {
+
+                clear();
+
+
+            } else if (effect === 'wave') {
+
+                var level = amplitude.getLevel();
+                if (level === undefined) {
+                    level = 0;
+                }
+                
+                var spacing = 10;
+                var w = width / (prevLevels.length * spacing);
+                if (w < 1) {
+                    w = 1;
+                }
+                var minHeight = 2;
+
+                prevLevels.push(level);
+                prevLevels.shift();
+                    
+                
+
+                for (var i = 0; i < prevLevels.length; i++) {
+
+                    var x = map(i, prevLevels.length, 0, width / 2, width);
+                    var h = map(prevLevels[i], 0, 0.5, minHeight, height);
+                    console.log();
+                    
+
+
+
+                        hueValue = map(h, minHeight, height, 0, 255);
+
+                        noFill();
+                        noStroke();
+                        currentColor = colorToRGB(hueValue, 255, 255, colorPanel)
+                        fill(currentColor.r, currentColor.g, currentColor.b)
+
+                        rect(x, height / 2, w, Math.floor(h));
+                        rect(width - x, height / 2, w, Math.floor(h));
+
+                }
+
+            } else if (effect === 'oscilloscope') {
+
+                // get a buffer of 1024 samples over time.
+                samples = fft.waveform(binCount);
+                var bufLen = samples.length;
+
+                // draw snapshot of the samples
+                noFill()
+                strokeWeight(1);
+                beginShape();
+                for (var i = 0; i < bufLen; i++) {   
+                    var x = map(i, 0, bufLen, 0, width);
+                    var y = map(samples[i], -1, 1, -height / 2, height / 2);
+                    hueValue = map(samples[i], -1, 1,0,255)
+                    currentColor = colorToRGB(hueValue, 255, 255, colorPanel)
+                    stroke(currentColor.r, currentColor.g, currentColor.b);
+                    vertex(x, y + height / 2);
+                }
+                endShape();
+
+            } else if (effect = 'freq') {
+                var spectrum = fft.analyze();
+                strokeWeight(1)
+                noFill();
+                for (let index = 0; index < freqNumber; index++) {
+                    noStroke();
+                    beginShape();
+                    myColor = setColorPanel(colorPanel,index);
+                    stroke(myColor);
+                    for (i = 0; i < spectrum.length; i++) {
+                        vertex(i, Math.round(map(spectrum[i], 0, 255, ((index+1) * (height / (freqNumber + 1))+20), 0)));
+
+                    }
+                    endShape();
+                }
+
+            }
+        }
+        
+        // for stars background
+        function update() {
+            var originX = WIDTH / 2;
+            var originY = HEIGHT / 2;
+
+            for (var i = 0, x = stars.length; i < x; i++) {
+                var s = stars[i];
+
+
+                var rad = (frameCount * (1 / (s.orbit * 2 + s.offset)) + s.offset) % TAU;
+                s.x = (originX + cos(rad) * (s.orbit * 2));
+                s.y = (originY + sin(rad) * (s.orbit));
+            }
+
+
+        }
+
+        function makeHex(a, b, size) {
+            var diff =
+                sin(radians(dist(a, b, width / 2, height / 2) - frameCount)) * size / ratio;
+            beginShape();
+            for (var i = 0; i < 6; i++) {
+                var angle = PI * i / 3;
+                vertex(
+                    a + sin(angle) * (size / ratio - diff),
+                    b + cos(angle) * (size / ratio - diff)
+                );
+            }
+            endShape(CLOSE);
+
+        }
+
+        function setColorPanel(panel, index) {
+            let colorR = colorSchemes[panel][index].r;
+            let colorG = colorSchemes[panel][index].g;
+            let colorB = colorSchemes[panel][index].b;
+
+            myColor = color(colorR,colorG,colorB);            
+
+            return myColor
+        }
+
+
+        var fileSize, partSize, fd, filePath, soundFile, dataColor;
+
+        // GUI commands
+        webrtc.onData((data) => {
+
+            if (data.cmd === 'effect') {
+                effect = data.arg
+            }
+
+            if (data.cmd === 'effectback') {
+                effectback = data.arg
+            }
+
+            // Play song
+
+            if (data.cmd === 'filePart') {
+                partSize += 1024 * 5;
+                var sizeReceived = Math.floor(partSize / fileSize * 100);
+                fs.writeSync(fd, Buffer.from(data.arg));
+            }
+
+            if (data.cmd === 'fileStart') {
+                console.log('upload started')
+                partSize = 0;
+                fileSize = data.arg;
+                filePath = path.join(__dirname, 'file.mp3');
+                fd = fs.openSync(filePath, 'w');
+                currentSource = 'soundFile';
+            };
+
+
+            if (data.cmd === 'fileEnd') {
+                console.log('upload finished')
+                fs.closeSync(fd);
+                preload();
+
+                function preload() {
+                    if (soundFile != undefined) {
+                        soundFile.stop()
+                    }
+                    soundFile = loadSound(filePath, () => {
+                        soundFile.play();
+                        mic.stop();
+                        fft.setInput(soundFile);
+                        amplitude.setInput(soundFile);
+                    });
+
+                };
+            }
+
+            // start microphone
+            if (data.cmd === 'microSource') {
+                if (soundFile != undefined) {
+                    soundFile.stop();
+                }
+                mic.start();
+                fft.setInput(mic);
+                currentSource = 'mic';
+                amplitude.setInput(mic);
+            }
+
+
+            // Play microphone return
+            if (data.cmd === 'microOutput') {
+                console.log('micro command received');
+                
+                if (data.arg === "start") {
+                    mic.connect();
+                } else {
+                    mic.disconnect();
+                     mic.start();
+                fft.setInput(mic);
+                currentSource = 'mic';
+                amplitude.setInput(mic);
+                }
+            }
+
+
+            // play/pause set up
+            if (data.cmd === 'soundSetting') {
+                if (data.arg === 'pause') {
+
+                    if (soundFile != undefined) {
+                        soundFile.pause();
+                    }
+                    mic.stop();
+
+                } else if (data.arg === 'start') {
+
+                    if (currentSource === 'soundFile') {
+                        soundFile.play();
+                    } else if (currentSource === 'mic') {
+                        mic.start();
+                    }
+                }
+
+            }
+
+            if (data.cmd === 'color') {
+                console.log('colorPanel recu');
+                
+
+                if (data.arg === 'multi') {
+                    colorPanel = 1;
+                } else if  (data.arg === 'terra') {
+                    colorPanel = 0;
+                } else if  (data.arg === 'party') {
+                    colorPanel = 2;
+                } else if  (data.arg === 'lounge') {
+                    colorPanel = 3;
+                } else if  (data.arg === 'sunrise') {
+                    colorPanel = 4;
+                } else if  (data.arg === 'neonite') {
+                    colorPanel = 5;
+                }
+                
+            };
+
+            if (data.cmd === 'freqNumber') {
+                freqNumber = data.arg;
+            };
+
+
+        });
+    </script>
+</body>
+
+</html>
