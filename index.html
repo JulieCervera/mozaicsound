@@ -24,11 +24,12 @@
     <script>
         // LedsChat modules
         let ledschat = require('ledschat');
+        let t = ledschat.topology();
         let fs = require('fs');
         let webrtc = new ledschat.WebRTC();
         let path = require('path');
 
-        var effect = 'a'
+        var effect = 'tiles'
         // freq spectrum variables
         var mic, fft, sound;
         var amplitude;
@@ -42,8 +43,8 @@
         var binCount = 1024;
         var audioGrab;
         var stars = [],
-            WIDTH = 80,
-            HEIGHT = 80,
+            WIDTH = t.width,
+            HEIGHT = t.height,
             FPS = 50, // Frames per second
             NUM_STARS = 100; // Number of stars
         // variables pour les pallette de couleur 
@@ -51,6 +52,33 @@
         var hueValue;
         var currentColor;
         var r, g, b;
+        
+        var previousTime = Date.now();
+        
+        
+        // tiles variables
+        
+        
+        
+        let squares = [];
+        
+        let nbModules = 0;
+        
+        ledschat.showDebugger();
+        console.log(t);
+        
+        for(let i = 0; i < t.height; ++i)
+        {
+            for(let j = 0; j < t.width; ++j)
+            {
+                if(t.matrix[i][j] == 1) ++ nbModules;
+            }
+        }
+        
+        
+        let currentHue = 0;
+        
+        
         // function pour les differente pallette de couleur
         function colorToRGB(hue, sat, value, id) {
             let colorScheme = colorSchemes[id];
@@ -92,6 +120,64 @@
 
 
         function setup() {
+            
+            setFrameRate(50);
+            
+            let x = Math.floor(t.width / 2);
+            let y = Math.floor(t.height / 2);
+            let cpt = 0;
+            let maxCpt = 1;
+            let direction = 0;
+            let step = 0;
+            
+            for(let i = 0; i < nbModules; )
+            {
+                
+                
+                console.log(x, y);
+                
+                if(t.matrix[y] != undefined && t.matrix[y][x] === 1)
+                {
+                    
+                    squares.push({x : x * 10 + 5, y : y * 10 + 5, size : 10, oldColor:0, newColor: 0})
+                    
+                    ++i;
+                }
+                
+                
+                switch(direction)
+                {
+                    case 0:
+                        y++;
+                        break;
+                    case 1:
+                        x++;
+                        break;
+                    case 2:
+                        y--;
+                        break;
+                    case 3:
+                        x--;
+                        break;
+                    
+                }
+                
+                if(++cpt == maxCpt)
+                {
+                    cpt = 0;
+                    if(++step == 2)
+                    {
+                        maxCpt++;
+                        step = 0;
+                    }
+                    
+                    direction  = (direction + 1) % 4;
+                    
+                    
+                }
+                
+            }
+            
 
             colorSchemes = [
             [ // Terracota scheme pallette de couleur
@@ -222,7 +308,7 @@
                 pop();
                 update();
             }
-
+            
 
 
             //function draw pour les animation liées au son
@@ -291,7 +377,7 @@
                 }
                 endShape();
 
-            } else if (effect = 'freq') {
+            } else if (effect === 'freq') {
                 var spectrum = fft.analyze();
                 strokeWeight(1)
                 noFill();
@@ -307,6 +393,53 @@
                     endShape();
                 }
 
+            }
+            else if(effect == 'tiles')
+            {
+                let now = Date.now();
+                
+                let elapsed = now - previousTime;
+                previousTime = now;
+                let spectrum = fft.analyze();
+                noStroke();
+                
+                for(let i = 0; i < squares.length; ++i)
+                {
+                    let c = colorToRGB(squares[i].oldColor, 200, 200, colorPanel);
+                    fill(c.r, c.g, c.b);
+                    rect(squares[i].x, squares[i].y, 10, 10);
+                    rect(squares[i].x, squares[i].y, 10, 10);
+                    
+                    
+                    
+                    if(squares[i].size != 10)
+                    {
+                        c = colorToRGB(squares[i].newColor, 200, 200, colorPanel);
+                        fill(c.r, c.g, c.b);
+                        rect(squares[i].x, squares[i].y, squares[i].size, Math.floor(squares[i].size));
+                        rect(squares[i].x, squares[i].y, squares[i].size, Math.floor(squares[i].size));
+                        
+                        squares[i].size += elapsed / 50 * 2.8;
+                        if(squares[i].size >= 10)
+                        {
+                            squares[i].size = 10;
+                            squares[i].oldColor = squares[i].newColor;
+                        }
+                    }
+                    else// if(Math.random() > 0.5)
+                    {
+                        let spectrumIndex = Math.floor(map(i, 0, squares.length, 0, spectrum.length *0.5));
+                        
+                        if(spectrum[spectrumIndex] > 80)
+                        {
+                            squares[i].size = 0;
+                            squares[i].newColor = Math.floor(map(spectrum[spectrumIndex], 80, 255, 0, 255));
+                        }
+                    }
+                    
+                }
+                
+                currentHue = (currentHue + 1) % 255;
             }
         }
         
