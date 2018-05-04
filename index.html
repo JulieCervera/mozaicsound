@@ -212,7 +212,11 @@
                 return new Promise((ok) => 
                 {
                     let filePath = path.join(__dirname, file);
-                    if(!fs.existsSync(filePath)) return;
+                    if(!fs.existsSync(filePath))
+		    {
+                        ok();
+                        return;
+                    }
                     
                     this.params.input.file = file;
                     
