@@ -1,0 +1,369 @@
+@font-face 
+{
+    font-family: glacial;
+    src: url('/frontend/fonts/GlacialIndifference-Regular.otf');
+}
+
+
+body
+{
+    background: lightgray;
+    font-family: glacial;
+    margin: 0px;
+    padding: 0px;
+
+}
+
+.center
+{
+    width: 600px;
+    max-width: 94%;
+    margin: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+
+}
+
+.textCenter
+{
+    text-align: center;
+}
+
+#form, #wait
+{
+    padding: 1.5%;
+    background: white;
+    border-radius: 3px;
+}
+
+#wait
+{
+    text-align: center;
+}
+
+#form
+{
+    display: none;
+}
+
+#form h1
+{
+    font-size: 22px;
+    font-weight: normal;
+    margin: 0px;
+    padding: 0px;
+    margin-bottom: 1.5%;
+    display: block;
+}
+
+#form h2
+{
+    font-size: 18px;
+    font-weight: normal;
+    margin: 0px;
+    padding: 0px;
+    display: block;
+    margin-bottom: 1.5%;
+    margin-top: 1.5%;
+}
+
+#form .data
+{   
+    margin-bottom: 1.5%;
+    background: #dfdfdf;
+    border-radius: 2px;
+    padding : 1.5%
+}
+
+.indata
+{
+    margin-bottom: 1.5%;
+}
+
+
+button
+{
+    background-size: 100% 100%;
+    border-radius: 4px;
+    box-shadow: 2px 2px 0px darkgray;
+    border:none;
+    margin: 0.5%;
+    font-family: glacial;
+    font-size: 16px;
+    background: white;
+    padding: 3px 1.5% 3px 1.5%;
+}
+
+button:active
+{
+    box-shadow: none;
+    transform: translateX(2px) translateY(2px);
+    
+}
+
+.button input 
+{
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.button label
+{
+    border-radius: 4px;
+    box-shadow: 2px 2px 0px darkgray;
+    border:none;
+    font-family: glacial;
+    font-size: 16px;
+    background-color: white;
+    padding: 3px 1.5% 3px 1.5%;
+    cursor: pointer;
+    float: left;
+    margin: 1%;
+    
+    width: 45%;
+}
+
+@media (max-width: 320px)
+{
+    .button label
+    {
+        width: 94%;
+    }
+}
+
+.button input:checked ~ label 
+{
+    box-shadow: none;
+    transform: translateX(2px) translateY(2px);
+}
+
+.button input:disabled ~ label 
+{
+    box-shadow: none;
+    color: lightgray;
+}
+
+.clear
+{
+    clear: both;
+}
+
+.image
+{
+    height: 20px;
+    background-size: 100% 100%;
+}
+
+#startPause
+{
+    background: #dfdfdf;
+    width: 100%;
+    margin: 0;
+}
+
+select
+{
+    width: 100%;
+    font-family: glacial;
+    font-size: 16px;
+    background: white;
+    border: none;
+    border-radius: 3px;
+    padding: 3px 1.5% 3px 1.5%;
+    margin-bottom: 1.5%;
+}
+
+#logo
+{
+    margin: auto;
+    margin-top: 3%;
+    background: url('/frontend/images/logoLedschat.jpg');
+    background-size: 100% 100%;
+    
+    width: 15vh;
+    height: 5.4vh;
+}
+
+#fileInputLabel
+{
+    width: 25%;
+}
+
+#fileInputText
+{
+    width: 65%;
+    background: white;
+    border-radius: 3px;
+    float: left;
+    padding: 3px 1.5% 3px 1.5%;
+    margin: 1%;
+}
+
+@media (max-width: 320px)
+{
+    #fileInputLabel
+    {
+        width: 95%;
+    }
+    
+    #fileInputText
+    {
+        width: 95%;
+    }
+}
+
+
+.checkbox
+{
+    position: absolute;
+    left: -9999px;
+}
+
+.checkbox + label
+{
+    position: relative;
+}
+
+
+.checkbox + label:after,
+.checkbox + label:before
+{
+    position: absolute;
+    content: "";
+}
+
+.checkbox + label:after
+{
+    right: -42px;
+    width: 20px;
+    top: 0px;
+    height: 20px;
+    border-radius: 20px;
+    background: gray;
+}
+
+.checkbox:checked + label:after
+{
+    right: -75px;
+}
+
+.checkbox + label:before
+{
+    right: -80px;
+    width: 56px;
+    max-width: 56px;
+    top: -3px;
+    height: 24px;
+    border-radius: 20px;
+    background: lightgray;
+    content: "off";
+    text-align: right;
+    padding-top: 3px;
+    padding-right: 7px;
+    padding-left: 0px;
+    color: #CC0000;
+}
+
+.checkbox:checked + label:before
+{
+    height: 24px;
+    content: "on";
+    padding-left: 7px;
+    padding-right: 0px;
+    color: #00CC66;
+    text-align: left;
+}
+
+.indataCheckbox
+{
+    margin-bottom: 3%;
+    margin-top: 1.5%;
+}
+
+#selectMicro, #selectFile, #selectOutput, #selectLines
+{
+    display: none;
+}
+
+
+.spinner 
+{
+  margin:  auto;
+  width: 50px;
+  height: 40px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.spinner > div 
+{
+  background-color: #333;
+  height: 100%;
+  width: 6px;
+  display: inline-block;
+  
+  -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;
+  animation: sk-stretchdelay 1.2s infinite ease-in-out;
+}
+
+.spinner .rect2 
+{
+  -webkit-animation-delay: -1.1s;
+  animation-delay: -1.1s;
+}
+
+.spinner .rect3 
+{
+  -webkit-animation-delay: -1.0s;
+  animation-delay: -1.0s;
+}
+
+.spinner .rect4 
+{
+  -webkit-animation-delay: -0.9s;
+  animation-delay: -0.9s;
+}
+
+.spinner .rect5 
+{
+  -webkit-animation-delay: -0.8s;
+  animation-delay: -0.8s;
+}
+
+@-webkit-keyframes sk-stretchdelay 
+{
+    0%, 40%, 100% { -webkit-transform: scaleY(0.4) }  
+    20% { -webkit-transform: scaleY(1.0) }
+}
+
+@keyframes sk-stretchdelay 
+{
+    0%, 40%, 100% { 
+        transform: scaleY(0.4);
+        -webkit-transform: scaleY(0.4);
+    }  20% { 
+        transform: scaleY(1.0);
+        -webkit-transform: scaleY(1.0);
+    }
+}
+
+#upload
+{
+    padding: 0px;
+    background: white;
+    border-radius: 4px;
+    width: 98%;
+    height: 25px;
+    margin: 1% 1% 0 1%;
+    display: none;
+}
+
+#progressBar
+{
+    height: 25px;
+    width: 30%;
+    background: #aaa;
+    border-radius: 4px;
+}
+

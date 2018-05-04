@@ -6,7 +6,8 @@
     <title>Sound Project Production</title>
 
     <style>
-        body {
+        body 
+        {
             background: black;
             padding: 0;
             margin: 0;
@@ -16,12 +17,16 @@
 
 <body>
     <!-- p5 library scripts -->
-    <script src="p5/p5.min.js"></script>
-    <script src="p5/addons/p5.dom.min.js"></script>
-    <script src="p5/addons/p5.sound.min.js"></script>
+    <script src="js/p5/p5.min.js"></script>
+    <script src="js/p5/addons/p5.dom.min.js"></script>
+    <script src="js/p5/addons/p5.sound.min.js"></script>
 
+    <script src="js/colors.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/backgrounds.js"></script>
 
     <script>
+    
         // LedsChat modules
         let ledschat = require('ledschat');
         let t = ledschat.topology();
@@ -29,587 +34,544 @@
         let webrtc = new ledschat.WebRTC();
         let path = require('path');
 
-        var effect = 'tiles'
-        // freq spectrum variables
-        var mic, fft, sound;
-        var amplitude;
-
-        var prevLevels = new Array(60);
-        var myColor;
-        var ratio = 1.78125;
-        var freqNumber = 1;
-        var currentSource = 'mic';
-        var effectback;
-        var binCount = 1024;
-        var audioGrab;
-        var stars = [],
-            WIDTH = t.width,
-            HEIGHT = t.height,
-            FPS = 50, // Frames per second
-            NUM_STARS = 100; // Number of stars
-        // variables pour les pallette de couleur 
-        let colorSchemes;
-        var hueValue;
-        var currentColor;
-        var r, g, b;
-        
-        var previousTime = Date.now();
-        
-        
-        // tiles variables
-        
-        
-        
-        let squares = [];
-        
-        let nbModules = 0;
+        let freqNumber = 1;
+        let currentSource = 'mic';
+        let effectback;
         
         ledschat.showDebugger();
-        console.log(t);
         
-        for(let i = 0; i < t.height; ++i)
+        let audioGrab;
+
+        let defaultParams = 
         {
-            for(let j = 0; j < t.width; ++j)
+            input:
             {
-                if(t.matrix[i][j] == 1) ++ nbModules;
+                type: 'micro',
+                id: 'default',
+                file: 'file.mp3'
+            },
+            output:
+            {
+                muted: true,
+                id: 'default'
+            },
+            effect: 'tiles',
+            ambience:
+            {
+                color: 0,
+                back: 'noneBack',
+                lines: 1
+                
             }
         }
+
         
-        
-        let currentHue = 0;
-        
-        
-        // function pour les differente pallette de couleur
-        function colorToRGB(hue, sat, value, id) {
-            let colorScheme = colorSchemes[id];
-
-            let nbColors = colorScheme.length;
-
-            let size = (0xFF + 1) / nbColors;
-
-            let ti = Math.floor(hue / size) % nbColors;
-            
-            let f = ((hue / size) % nbColors) - ti;
-
-            let high = value;
-            let low = value * (0xFF - sat) / 0xFF;
-
-            let beginRed = map(colorScheme[ti].r, 0, 0xFF, low, high);
-            let endRed = map(colorScheme[(ti + 1) % nbColors].r, 0, 0xFF, low, high);
-
-            let newRed = (endRed - beginRed) * f + beginRed;
-
-            let beginGreen = map(colorScheme[ti].g, 0, 0xFF, low, high);
-            let endGreen = map(colorScheme[(ti + 1) % nbColors].g, 0, 0xFF, low, high);
-
-            let newGreen = (endGreen - beginGreen) * f + beginGreen;
-
-            let beginBlue = map(colorScheme[ti].b, 0, 0xFF, low, high);
-            let endBlue = map(colorScheme[(ti + 1) % nbColors].b, 0, 0xFF, low, high);
-
-            let newBlue = (endBlue - beginBlue) * f + beginBlue;
-
-            return {
-                r: newRed,
-                g: newGreen,
-                b: newBlue
-            };
-        }
-
-        var colorPanel = 3;
-
-
-        function setup() {
-            
-            setFrameRate(50);
-            
-            let x = Math.floor(t.width / 2);
-            let y = Math.floor(t.height / 2);
-            let cpt = 0;
-            let maxCpt = 1;
-            let direction = 0;
-            let step = 0;
-            
-            for(let i = 0; i < nbModules; )
+        class Music
+        {
+            constructor(params, t)
             {
-                
-                
-                console.log(x, y);
-                
-                if(t.matrix[y] != undefined && t.matrix[y][x] === 1)
+                this.params = params;
+                this.top    = t;
+
+                this.effects = 
                 {
-                    
-                    squares.push({x : x * 10 + 5, y : y * 10 + 5, size : 10, oldColor:0, newColor: 0})
-                    
-                    ++i;
-                }
+                    waves:        new WavesEffect(t),
+                    oscilloscope: new OscilloEffect(t),
+                    frequency:    new FrequencyEffect(t),
+                    tiles:        new TilesEffect(t)
+                };
                 
-                
-                switch(direction)
+                this.backs =
                 {
-                    case 0:
-                        y++;
-                        break;
-                    case 1:
-                        x++;
-                        break;
-                    case 2:
-                        y--;
-                        break;
-                    case 3:
-                        x--;
-                        break;
-                    
-                }
+                    mozaicBack: new MozaicBackground(t),
+                    starsBack:  new StarsBackground(t),
+                    noneBack:   new NoneBackground(t),
+                };
                 
-                if(++cpt == maxCpt)
+                this.upload =
                 {
-                    cpt = 0;
-                    if(++step == 2)
-                    {
-                        maxCpt++;
-                        step = 0;
-                    }
-                    
-                    direction  = (direction + 1) % 4;
-                    
+                    size : 0,
+                    currentSize: 0,
+                    name : '',
+                    fd: 0,
+                    running: false,
+                    lastEvent: 0,
+                    lastProgress: 0
                     
                 }
                 
+                this.effect = null;
+                this.back   = null;
+                
+                this.newSoundFile = null;
+                
+                this.mic    = new p5.AudioIn();
+                
+                this.audio  = new Audio();
+                this.dest   = p5.soundOut.audiocontext.createMediaStreamDestination();
+                this.audio.src = URL.createObjectURL(this.dest.stream);
+                
+                this.mic.connect(this.dest);
+                
+                this.ready = false;
+                this.paused = false;
             }
             
-
-            colorSchemes = [
-            [ // Terracota scheme pallette de couleur
-                {r: 0x00, g: 0x30, b: 0x49},
-                {r: 0xD6, g: 0x28, b: 0x28},
-                {r: 0xF7, g: 0x7F, b: 0x00},
-                {r: 0xFC, g: 0xBF, b: 0x49},
-                {r: 0xEA, g: 0xE2, b: 0xB7}
-            ],
-            [ // HSV scheme pallette de couleur
-                {r: 0xFF, g: 0x00, b : 0x00},
-                {r: 0xFF, g: 0xFF, b : 0x00},
-                {r: 0x00, g: 0xFF, b : 0x00},
-                {r: 0x00, g: 0xFF, b : 0xFF},
-                {r: 0x00, g: 0x00, b : 0xFF},
-                {r: 0xFF, g: 0x00, b : 0xFF},
-            ],
-            [ // Party pallette de couleur
-                {r: 0x0F, g: 0xA3, b : 0xB1},
-                {r: 0xEE, g: 0x6C, b : 0x4D},
-                {r: 0xF3, g: 0x8D, b : 0x68},
-                {r: 0x84, g: 0x56, b : 0xA7},
-                {r: 0xDA, g: 0xE5, b : 0x39},
-            ],
-            [ // Lounge pallette de couleur
-                {r: 0xCC, g: 0xDB, b : 0xBC},
-                {r: 0x80, g: 0xCE, b : 0xD7},
-                {r: 0x63, g: 0xC7, b : 0xB2},
-                {r: 0x8E, g: 0x6C, b : 0x88},
-                {r: 0x0D, g: 0x5E, b : 0x70},
+            async setup()
+            {
+                await this.refreshIO();
+                await this.mic.getSources();
+    
+                this.setEffect(this.params.effect);
+                this.setColor(this.params.ambience.color);
+                this.setLines(this.params.ambience.lines);
+                this.setMuted(this.params.output.muted);
+                this.setBack(this.params.ambience.back);
+                this.setOutput(this.params.output.id);
+                this.setMicroInput(this.params.input.id);
+                await this.setFileInput(this.params.input.file);
+                  
+                if(this.params.input.type == 'file')
+                {
+                    this.startFile();
+                }
+                else
+                {
+                    this.startMicro();
+                }
                 
-            ],
-            [ // Sunrise pallette de couleur
-                {r: 0xE3, g: 0xFF, b : 0x00},
-                {r: 0xFF, g: 0x8D, b : 0x00},
-                {r: 0xFF, g: 0x4D, b : 0x00},
-                {r: 0xFF, g: 0x00, b : 0x00},
-                {r: 0xE1, g: 0x00, b : 0x00},
+                this.setupEffect();
                 
-            ],
-            [ // Neonite pallette de couleur
-                {r: 0x00, g: 0xEE, b : 0xEE},
-                {r: 0x00, g: 0xFF, b : 0x99},
-                {r: 0xFF, g: 0x99, b : 0x00},
-                {r: 0x99, g: 0xFF, b : 0x00},
-                {r: 0x99, g: 0x00, b : 0xFF},
+                this.commitParameters();
+
+                setFrameRate(50);
+            
+                createCanvas(window.innerWidth, window.innerHeight);
+                rectMode(CENTER);
                 
-            ],
+                this.ready = true;
 
-
-        ];
-
-            prevLevels.fill(0)
-
-            var cnv = createCanvas(window.innerWidth, window.innerHeight);
-            noFill();
-            noStroke();
-
-            // freq spectrum setup
-            mic = new p5.AudioIn();
-            fft = new p5.FFT();
-
-            // waveform setup
-            amplitude = new p5.Amplitude();
-            rectMode(CENTER);
-            amplitude.smooth(0.6);
-
-
-            // background setup
-            strokeWeight(0.25);
-            strokeCap(SQUARE);
-            for (var i = 0; i < NUM_STARS; i++) {
-                stars.push({
-                    x: 0,
-                    y: 0,
-                    offset: Math.random() * 360,
-                    // Weight orbit a little to be outside origin
-                    orbit: (Math.random() + 0.01) * max(WIDTH, HEIGHT),
-                    radius: Math.random() * 2,
-                    vx: Math.floor(Math.random() * 10) - 5,
-                    vy: Math.floor(Math.random() * 10) - 5
+            }
+            
+            commitParameters()
+            {
+                let settingsFile = path.join(__dirname, 'settings.json');
+                fs.writeFileSync(settingsFile, JSON.stringify(this.params));
+            }
+            
+            isReady()
+            {
+                return this.ready;
+            }
+            
+            async refreshIO()
+            {
+                return new Promise((ok) => {
+                    navigator.mediaDevices.enumerateDevices().then((data) => {
+                
+                        this.devices = {input: [], output:[]};
+                        
+                        for(let i = 0; i < data.length; ++i)
+                        {
+                            let d = 
+                            {
+                                label: data[i].label,
+                                deviceId: data[i].deviceId
+                                
+                            };
+                            if(data[i].kind == 'audioinput')
+                                this.devices.input.push(d);
+                            else if(data[i].kind == 'audiooutput')
+                                this.devices.output.push(d);
+                        }
+                        
+                        ok();
+                        
+                    });
                 });
             }
-
-            frameRate(FPS);
-            loop();
-
-            return myColor;
-
-        }
-
-
-        function draw() {
-            background(0);
-            // function draw pour les animation du background
-
-            if (effectback === 'noeffectback') {
-                clear();
-            } else if (effectback === 'mozaique') {
-                var size = 10;
-                var offset = size * ratio;
-                for (var x = 0; x <= width + size; x += size * 2) {
-                    for (var y = 0; y <= height + offset; y += offset) {
-                        var x0 = 0;
-                        if (y % (offset * 2) == 0) {
-                            noStroke();
-                            fill('rgba(255,255,255,0.25)');
-                            x0 = size;
-                        } else {
-                            noStroke();
-                            fill('rgba(166,166,166,0.25)');
-                            xo = 0;
-                        }
-
-                        makeHex(x + x0, y, size);
+            
+            setMicroInput(id)
+            {
+                for(let i = 0; i < this.devices.input.length; ++i)
+                {
+                    if(this.devices.input[i].deviceId == id)
+                    {
+                        this.params.input.id = id;
+                        this.mic.setSource(i);
+                        return;
                     }
                 }
-            } else if (effectback === 'starz') {
-                push();
-                noFill();
-                stroke("white");
-                strokeCap(ROUND);
-                strokeWeight(0.5);
-                for (var i = 0, x = stars.length; i < x; i++) {
-                    var s = stars[i];
-                    ellipse(s.x, s.y, s.radius, 0);
-                }
-                pop();
-                update();
+                
+                this.params.input.id = this.devices.input[0];
+                this.mic.setSource(0);
             }
             
-
-
-            //function draw pour les animation liées au son
-            if (effect === 'noeffect') {
-
-                clear();
-
-
-            } else if (effect === 'wave') {
-
-                var level = amplitude.getLevel();
-                if (level === undefined) {
-                    level = 0;
-                }
-                
-                var spacing = 10;
-                var w = width / (prevLevels.length * spacing);
-                if (w < 1) {
-                    w = 1;
-                }
-                var minHeight = 2;
-
-                prevLevels.push(level);
-                prevLevels.shift();
-                    
-                
-
-                for (var i = 0; i < prevLevels.length; i++) {
-
-                    var x = map(i, prevLevels.length, 0, width / 2, width);
-                    var h = map(prevLevels[i], 0, 0.5, minHeight, height);
-                    console.log();
-                    
-
-
-
-                        hueValue = map(h, minHeight, height, 0, 255);
-
-                        noFill();
-                        noStroke();
-                        currentColor = colorToRGB(hueValue, 255, 255, colorPanel)
-                        fill(currentColor.r, currentColor.g, currentColor.b)
-
-                        rect(x, height / 2, w, Math.floor(h));
-                        rect(width - x, height / 2, w, Math.floor(h));
-
-                }
-
-            } else if (effect === 'oscilloscope') {
-
-                // get a buffer of 1024 samples over time.
-                samples = fft.waveform(binCount);
-                var bufLen = samples.length;
-
-                // draw snapshot of the samples
-                noFill()
-                strokeWeight(1);
-                beginShape();
-                for (var i = 0; i < bufLen; i++) {   
-                    var x = map(i, 0, bufLen, 0, width);
-                    var y = map(samples[i], -1, 1, -height / 2, height / 2);
-                    hueValue = map(samples[i], -1, 1,0,255)
-                    currentColor = colorToRGB(hueValue, 255, 255, colorPanel)
-                    stroke(currentColor.r, currentColor.g, currentColor.b);
-                    vertex(x, y + height / 2);
-                }
-                endShape();
-
-            } else if (effect === 'freq') {
-                var spectrum = fft.analyze();
-                strokeWeight(1)
-                noFill();
-                for (let index = 0; index < freqNumber; index++) {
-                    noStroke();
-                    beginShape();
-                    myColor = setColorPanel(colorPanel,index);
-                    stroke(myColor);
-                    for (i = 0; i < spectrum.length; i++) {
-                        vertex(i, Math.round(map(spectrum[i], 0, 255, ((index+1) * (height / (freqNumber + 1))+20), 0)));
-
-                    }
-                    endShape();
-                }
-
-            }
-            else if(effect == 'tiles')
+            async setFileInput(file)
             {
-                let now = Date.now();
-                
-                let elapsed = now - previousTime;
-                previousTime = now;
-                let spectrum = fft.analyze();
-                noStroke();
-                
-                for(let i = 0; i < squares.length; ++i)
+                return new Promise((ok) => 
                 {
-                    let c = colorToRGB(squares[i].oldColor, 200, 200, colorPanel);
-                    fill(c.r, c.g, c.b);
-                    rect(squares[i].x, squares[i].y, 10, 10);
-                    rect(squares[i].x, squares[i].y, 10, 10);
+                    let filePath = path.join(__dirname, file);
+                    if(!fs.existsSync(filePath)) return;
                     
+                    this.params.input.file = file;
                     
+                    let old = this.soundFile;
                     
-                    if(squares[i].size != 10)
-                    {
-                        c = colorToRGB(squares[i].newColor, 200, 200, colorPanel);
-                        fill(c.r, c.g, c.b);
-                        rect(squares[i].x, squares[i].y, squares[i].size, Math.floor(squares[i].size));
-                        rect(squares[i].x, squares[i].y, squares[i].size, Math.floor(squares[i].size));
+                    this.soundFile = loadSound(filePath, () => {
                         
-                        squares[i].size += elapsed / 50 * 2.8;
-                        if(squares[i].size >= 10)
-                        {
-                            squares[i].size = 10;
-                            squares[i].oldColor = squares[i].newColor;
-                        }
-                    }
-                    else// if(Math.random() > 0.5)
-                    {
-                        let spectrumIndex = Math.floor(map(i, 0, squares.length, 0, spectrum.length *0.5));
-                        
-                        if(spectrum[spectrumIndex] > 80)
-                        {
-                            squares[i].size = 0;
-                            squares[i].newColor = Math.floor(map(spectrum[spectrumIndex], 80, 255, 0, 255));
-                        }
-                    }
+                        if(old != undefined)
+                            old.stop();
+                            
+                        this.soundFile.disconnect();
+                        this.soundFile.connect(this.dest);
+                        this.soundFile.setLoop(true);
+                        ok();
+                    });
+                });
+            }
+            
+            start()
+            {
+                if (this.params.input.type === 'file')
+                    this.startFile();
+                else
+                    this.startMicro();
+            }
+            
+            pause()
+            {
+                if (this.soundFile != undefined)
+                    this.soundFile.pause();
                     
+                this.mic.stop();
+                this.paused = true;
+            }
+            
+            startMicro()
+            {
+                if (this.soundFile != undefined)
+                    this.soundFile.stop();
+                    
+                this.mic.start();
+                this.paused = false;
+                
+                this.params.input.type = 'micro';
+                
+            }
+            
+            startFile()
+            {
+                this.mic.stop();
+
+                if(this.soundFile != undefined)
+                    this.soundFile.play();
+                    
+                this.paused = false;
+                
+                this.params.input.type = 'file';
+            }
+            
+            setOutput(id)
+            {
+                for(let i = 0; i < this.devices.output.length; ++i)
+                {
+                    if(this.devices.output[i].deviceId == id)
+                    {
+                        this.params.output.id = id;
+                        this.audio.setSinkId(this.params.output.id);
+                        return;
+                    }
                 }
                 
-                currentHue = (currentHue + 1) % 255;
+                this.params.output.id = this.devices.output[0];
+                this.audio.setSinkId(this.params.output.id);
+            }
+            
+            setLines(lines)
+            {
+                if(typeof lines !== 'number')
+                {
+                    this.params.ambience.lines = 1;
+                }
+                else if(lines < 1)
+                {
+                    this.params.ambience.lines = 1;
+                }
+                else if(lines > 5)
+                {
+                    this.params.ambience.lines = 5;
+                }
+                else
+                    this.params.ambience.lines = lines;
+            }
+            
+            setMuted(muted)
+            {
+                if(typeof muted !== 'boolean')
+                {
+                    this.params.output.muted = true;
+                }
+                else
+                {
+                    this.params.output.muted = muted;
+                }
+                
+                if(this.params.output.muted)
+                    this.audio.pause();
+                else
+                    this.audio.play();
+                
+            }
+            
+            setColor(color)
+            {
+                if(typeof color !== 'number')
+                {
+                    this.params.ambience.color = 0;
+                }
+                else if(color < 0)
+                {
+                    this.params.ambience.color = 0;
+                }
+                else if(color >= colorSchemes.length)
+                {
+                    this.params.ambience.color = colorSchemes.length- 1;
+                }
+                else
+                    this.params.ambience.color = color;
+                
+            }
+            
+            setEffect(effect)
+            {
+                if(this.effects[effect] == undefined) 
+                    this.params.effect = 'tiles'
+                else
+                    this.params.effect = effect;
+                this.effect = this.effects[this.params.effect];
+                
+            }
+            
+            setBack(effect)
+            {
+                if(this.backs[effect] == undefined) 
+                    this.params.ambience.back = 'noneBack';
+                else
+                    this.params.ambience.back = effect;
+                    
+                this.back = this.backs[this.params.ambience.back];
+                this.back.setup();
+                
+            }
+            
+            setupEffect()
+            {
+                this.effect.setup(this.params.input.type == 'micro' ? this.mic : this.soundFile, colorSchemes[this.params.ambience.color], this.params.ambience.lines);
+            }
+            
+            draw()
+            {
+                background(0);
+                if(this.paused) return;
+                
+                this.back.draw();
+                this.effect.draw();
+                
+                if(this.upload.running && Date.now() - this.upload.lastEvent > 10000)
+                {
+                    this.upload.running = false;
+                    let d = {cmd : 'status', params: this.params, paused: this.paused, devices: this.devices, upload: this.upload.running, progress: this.upload.lastProgress};
+                    webrtc.send(d);
+                }
+            }
+            
+            async events(data)
+            {
+                
+                if(data.cmd === 'microId')
+                {
+                    this.setMicroInput(data.arg);
+                }
+                
+                if(data.cmd === 'outputId')
+                {
+                    this.setOutput(data.arg);
+                }
+                
+                if (data.cmd === 'effect')
+                {
+                    this.setEffect(data.arg);
+                    this.setupEffect();
+                }
+                
+                if (data.cmd === 'effectback')
+                {
+                    this.setBack(data.arg);
+                }
+                  
+                if (data.cmd === 'filePart') 
+                {
+                    if(this.upload.running)
+                    {
+                        let buffer = Buffer.from(data.arg);
+                        
+                        if(this.upload.currentSize + buffer.length >= this.upload.size)
+                        {
+                            let toWrite = this.upload.size - this.upload.currentSize;
+                            this.upload.currentSize += toWrite;
+                            fs.writeSync(this.upload.fd, Buffer.from(buffer, 0, toWrite));
+                            
+                            this.upload.lastProgress = 0;
+                            
+                            fs.closeSync(this.upload.fd);
+                            let oldPath = path.join(__dirname, 'tmp', 'tmp');
+                            let newPath = path.join(__dirname, this.upload.name);
+                            fs.renameSync(oldPath, newPath);
+                            
+                            webrtc.send({cmd: 'upload', progress: 100});
+                            
+                            await this.setFileInput(this.upload.name);
+                            this.setupEffect();
+                            this.startFile();
+                            this.upload.running = false;
+                        }
+                        else
+                        {
+                            this.upload.currentSize += buffer.length;
+                            fs.writeSync(this.upload.fd, buffer);
+                        
+                        
+                            this.upload.lastEvent = Date.now();
+                            
+                            let newProgress = Math.floor(this.upload.currentSize * 100 / this.upload.size);
+                            
+                            if(newProgress > this.upload.lastProgress + 1)
+                            {
+                                this.upload.lastProgress = newProgress;
+                                webrtc.send({cmd: 'upload', progress: newProgress});
+                            }
+                            
+                            return;
+                        }
+                    }
+                    else
+                        return;
+                    
+                }
+    
+                if (data.cmd === 'fileStart') 
+                {
+                    let maxSize = 50 * 1024 * 1024 // 50mo
+                    if(!this.upload.running && data.name.indexOf('/') == -1 && data.name.indexOf('\\') == -1 && data.size < maxSize)
+                    {
+                    
+                        this.upload.currentSize = 0;
+                        this.upload.size = data.size;
+                        this.upload.name = data.name;
+                        this.upload.running = true;
+                        this.upload.lastEvent = Date.now();
+                        this.upload.lastProgress = 0;
+                        
+                        let newDir = path.join(__dirname, 'tmp');
+                        if(!fs.existsSync(newDir))
+                            fs.mkdirSync(newDir);
+                        
+                        let filePath = path.join(newDir, 'tmp');
+                        
+                        this.upload.fd = fs.openSync(filePath, 'w');
+                    }
+                    else
+                        return;
+                    
+                    
+                };
+    
+                /*
+                if (data.cmd === 'fileEnd' && this.upload.running) 
+                {
+                    fs.closeSync(this.upload.fd);
+                    let oldPath = path.join(__dirname, 'tmp', 'tmp');
+                    let newPath = path.join(__dirname, this.upload.name);
+                    fs.renameSync(oldPath, newPath);
+                    
+                    await this.setFileInput(this.upload.name);
+                    this.setupEffect();
+                    this.startFile();
+                    this.upload.running = false;
+                }
+                */
+    
+                if (data.cmd === 'micro')
+                    this.startMicro();
+                
+                if(data.cmd == 'file')
+                    this.startFile();
+    
+    
+                if (data.cmd === 'mute') 
+                    this.setMuted(data.arg);
+    
+                if (data.cmd === 'pause') 
+                    this.pause();
+    
+                    
+                if (data.cmd === 'start') 
+                    this.start();
+    
+                if (data.cmd === 'color') 
+                {
+                    this.setColor(data.arg);
+                    this.setupEffect();
+                }
+    
+                if (data.cmd === 'freqNumber')
+                {
+                    this.setLines(data.arg);
+                    this.setupEffect();
+                }
+                
+                this.commitParameters();
+                
+                let d = {cmd : 'status', params: this.params, paused: this.paused, devices: this.devices, upload: this.upload.running, progress: this.upload.lastProgress};
+                webrtc.send(d);
             }
         }
         
-        // for stars background
-        function update() {
-            var originX = WIDTH / 2;
-            var originY = HEIGHT / 2;
+        let settingsFile = path.join(__dirname, 'settings.json');
+        
+        let params = '';
+        if(fs.existsSync(settingsFile))
+            params = JSON.parse(fs.readFileSync(settingsFile));
+        else
+            params = defaultParams;
+        
+        let music = new Music(params, t);
+        webrtc.onData(music.events.bind(music));
 
-            for (var i = 0, x = stars.length; i < x; i++) {
-                var s = stars[i];
-
-
-                var rad = (frameCount * (1 / (s.orbit * 2 + s.offset)) + s.offset) % TAU;
-                s.x = (originX + cos(rad) * (s.orbit * 2));
-                s.y = (originY + sin(rad) * (s.orbit));
-            }
-
-
-        }
-
-        function makeHex(a, b, size) {
-            var diff =
-                sin(radians(dist(a, b, width / 2, height / 2) - frameCount)) * size / ratio;
-            beginShape();
-            for (var i = 0; i < 6; i++) {
-                var angle = PI * i / 3;
-                vertex(
-                    a + sin(angle) * (size / ratio - diff),
-                    b + cos(angle) * (size / ratio - diff)
-                );
-            }
-            endShape(CLOSE);
-
-        }
-
-        function setColorPanel(panel, index) {
-            let colorR = colorSchemes[panel][index].r;
-            let colorG = colorSchemes[panel][index].g;
-            let colorB = colorSchemes[panel][index].b;
-
-            myColor = color(colorR,colorG,colorB);            
-
-            return myColor
+        function setup() 
+        {
+            
+            music.setup();
         }
 
 
-        var fileSize, partSize, fd, filePath, soundFile, dataColor;
-
-        // GUI commands
-        webrtc.onData((data) => {
-
-            if (data.cmd === 'effect') {
-                effect = data.arg
-            }
-
-            if (data.cmd === 'effectback') {
-                effectback = data.arg
-            }
-
-            // Play song
-
-            if (data.cmd === 'filePart') {
-                partSize += 1024 * 5;
-                var sizeReceived = Math.floor(partSize / fileSize * 100);
-                fs.writeSync(fd, Buffer.from(data.arg));
-            }
-
-            if (data.cmd === 'fileStart') {
-                console.log('upload started')
-                partSize = 0;
-                fileSize = data.arg;
-                filePath = path.join(__dirname, 'file.mp3');
-                fd = fs.openSync(filePath, 'w');
-                currentSource = 'soundFile';
-            };
+        function draw() 
+        {
+            if(!music.isReady()) return;
+            
+            music.draw();
+        }
 
 
-            if (data.cmd === 'fileEnd') {
-                console.log('upload finished')
-                fs.closeSync(fd);
-                preload();
 
-                function preload() {
-                    if (soundFile != undefined) {
-                        soundFile.stop()
-                    }
-                    soundFile = loadSound(filePath, () => {
-                        soundFile.play();
-                        mic.stop();
-                        fft.setInput(soundFile);
-                        amplitude.setInput(soundFile);
-                    });
+        //let fileSize, partSize, fd, filePath, soundFile, dataColor;
 
-                };
-            }
-
-            // start microphone
-            if (data.cmd === 'microSource') {
-                if (soundFile != undefined) {
-                    soundFile.stop();
-                }
-                mic.start();
-                fft.setInput(mic);
-                currentSource = 'mic';
-                amplitude.setInput(mic);
-            }
-
-
-            // Play microphone return
-            if (data.cmd === 'microOutput') {
-                console.log('micro command received');
-                
-                if (data.arg === "start") {
-                    mic.connect();
-                } else {
-                    mic.disconnect();
-                     mic.start();
-                fft.setInput(mic);
-                currentSource = 'mic';
-                amplitude.setInput(mic);
-                }
-            }
-
-
-            // play/pause set up
-            if (data.cmd === 'soundSetting') {
-                if (data.arg === 'pause') {
-
-                    if (soundFile != undefined) {
-                        soundFile.pause();
-                    }
-                    mic.stop();
-
-                } else if (data.arg === 'start') {
-
-                    if (currentSource === 'soundFile') {
-                        soundFile.play();
-                    } else if (currentSource === 'mic') {
-                        mic.start();
-                    }
-                }
-
-            }
-
-            if (data.cmd === 'color') {
-                console.log('colorPanel recu');
-                
-
-                if (data.arg === 'multi') {
-                    colorPanel = 1;
-                } else if  (data.arg === 'terra') {
-                    colorPanel = 0;
-                } else if  (data.arg === 'party') {
-                    colorPanel = 2;
-                } else if  (data.arg === 'lounge') {
-                    colorPanel = 3;
-                } else if  (data.arg === 'sunrise') {
-                    colorPanel = 4;
-                } else if  (data.arg === 'neonite') {
-                    colorPanel = 5;
-                }
-                
-            };
-
-            if (data.cmd === 'freqNumber') {
-                freqNumber = data.arg;
-            };
-
-
-        });
+       
+        
+        
+        
+        
     </script>
 </body>
 

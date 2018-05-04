@@ -5,349 +5,386 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Sound Project</title>
+    <title>Led's Chat Sound</title>
 
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="frontend/bootstrap/css/bootstrap.min.css">
-
-
+    <link rel="stylesheet" type="text/css" href="frontend/css/style.css">
 </head>
 
-<body style="background-image: url('frontend/stonehaven.png');">
+<body>
 
-    <div class="container">
-        <div style="background: white;" class="col-12 col-md-8 col-lg-6 m-1 p-3 mx-auto border rounded my-md-5">
-            <img class="mx-auto d-block w-25 h-25 my-2" src="frontend/ledschatIcon.png" id="logo" />
-            <p class="my-2">1. Select your sound source</p>
-            <div class="row pr-1 my-1">
-                <div class="row col-12 m-2">
-                    <button class="btn btn-info mr-2" type="button" id="micro">Use Microphone</button>
-                    <div class="m-2 form-check">
-                        <input class="form-check-input" type="checkbox" id="microOutput" value="start">
-                        <label class="form-check-label" for="microOutput">Play it</label>
+    <div class="center">
+        
+        <div id="wait">
+            <div class="spinner">
+                <div class="rect1"></div>
+                <div class="rect2"></div>
+                <div class="rect3"></div>
+                <div class="rect4"></div>
+                <div class="rect5"></div>
+            </div>
+        </div>
+        <div id="form">
+            <h1>Select your audio input</h1>
+            <div class="data">
+                <div class="button">
+                    <input type="radio" id="micro" name="source"/>
+                    <label for="micro">Microphone</label>
+                </div>
+                <div class="button">
+                    <input type="radio" id="file" name="source"/>
+                    <label for="file">Audio file</label>
+                </div>
+                <div class="clear"></div>
+                <div id="selectMicro">
+                    <h2>Select the microphone</h2>
+                    <div class="indata">
+                        <select id="microId">
+                        </select>
                     </div>
                 </div>
-                <div class="col-12 m-2">
-                    <div id="fileSettings" class="input-group">
-                        <div>
-                            <button class="btn btn-info" id="fileGo" type="button">Upload</button>
+                <div id="selectFile">
+                    <h2>Select a file</h2>
+                    <div class="indata">
+                        <div class="button">
+                            <input type="file" id="fileInput">
+                            <label for="fileInput" id="fileInputLabel">Open</label>
                         </div>
-                        <div class="custom-file p-1">
-                            <input type="file" class="custom-file-input" id="fileInput">
-                            <label class="custom-file-label" for="fileInput">Choose file</label>
-                        </div>
-                    </div>
-
-                    <div class="col-12" style="display: none;" id="progressDiv" >
-                        <div class="progress my-2">
-                            <div id="progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div id="fileInputText">No file selected</div><div class="clear"></div>
+                        <div id="upload">
+                            <div id="progressBar"></div>
                         </div>
                     </div>
                 </div>
             </div>
-            <p class="my-2">2. Choose an effect</p>
-
-
-                <div class="col-12 p-2 row d-flex justify-content-center no-wrap">
-                    <button class="col-lg-5 col-md-5 col-sm-6 btn btn-info btn-sm m-1 " type="button" id="wave"><font size="2">Sound Wave</font></button>
-
-                    <button class="col-lg-5 col-md-5 col-sm-6 btn btn-info btn-sm m-1" type="button" id="freqSpec"><font size="2">Frequency Spectrum</font></button>
-
-                    <button class="col-lg-5 col-md-5 col-sm-6 btn btn-info btn-sm m-1" type="button" id="oscilloscope"><font size="2">Oscilloscope</font></button>
-
-                    <button class="col-lg-5 col-md-5 col-sm-6 btn btn-muted btn-sm m-1" type="button" id="none"><font size="2">No effect</font></button>
+            <h1>Select your audio output</h1>
+            <div class="data">     
+                <div class="indataCheckbox">
+                    <input class="checkbox" type="checkbox" id="mute">
+                    <label for="mute">Mute</label>
                 </div>
-
-            <p class="my-2">3. Set the ambiance </p>
-            <div class="my-1">
-                    <div class="col-12 row d-sm-flex justify-content-between align-items-baseline no-wrap">
-                        <p class="col-12 mr-2 my-2">color</p>
-                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 terracota" type="button">Terracota</button>
-                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 multicolor" type="button">Multicolor</button>
-                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 party" type="button">Party</button>
-                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 lounge" type="button">Lounge</button>
-                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 sunrise" type="button">Sunrise</button>
-                        <button class="col-lg-2 col-md-2 col-sm-4 btn btn-light btn-sm mx-1 neonite" type="button">Neonite</button>
-                    </div>
-                    <div class="col-12 row d-sm-flex justify-content-around align-items-baseline">
-                        <p class="col-12 mr-2 my-2">background</p>
-                        <button class="col-lg-4 col-md-4 col-sm-6 btn btn-light btn-sm  mozaiqueBack" type="button">Mozaique</button>
-                        <button class="col-lg-4 col-md-4 col-sm-6 btn btn-light btn-sm  starsBack" type="button">stars</button>
-                        <button class="col-lg-4 col-md-4 col-sm-6 btn btn-light btn-sm  noeffectBack" type="button">None</button>
-                    </div>
-                    <div class="col-12 row d-sm-flex justify-content-between align-items-baseline wrap">
-                        <p class="col-lg-5 col-md-5 col-sm-12 mr-2 my-2">Number of lines</p>
-                        <select class="form-control form-control-sm col-lg-5 col-md-5 col-sm-12 " id="freqNum">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
+                <div id="selectOutput">
+                    <h2>Select the speaker</h2>
+                    <div class="indata">
+                        <select id="outputId">
                         </select>
                     </div>
                 </div>
-            <button class="btn btn-lg align-self-start btn-warning mt-2 ml-2" type="button" id="soundSetting" value="started">Pause</button>
+            </div>
+            <h1>Choose an effect</h1>
+            <div class="data">
+                <div class="button">
+                    <input type="radio" id="waves" name="effect"/>
+                    <label for="waves">Sound wave</label>
+                </div>
+                <div class="button">
+                    <input type="radio" id="frequency" name="effect"/>
+                    <label for="frequency">Frequency</label>
+                </div>
+                <div class="button">
+                    <input type="radio" id="oscilloscope" name="effect"/>
+                    <label for="oscilloscope">Oscilloscope</label>
+                </div>
+                <div class="button">
+                    <input type="radio" id="tiles" name="effect"/>
+                    <label for="tiles">Tiles</label>
+                </div>
+                <div class="clear"></div>
+            </div>
+
+            <h1>Set the ambience </h1>
+            <div class= "data">
+                <h2>Color</h2>
+                <div class= "indata">
+    
+                    <div class="button">
+                        <input type="radio" id="palette1" name="palette"/>
+                        <label class="image" style="background-image: url('frontend/images/palette1.png')" for="palette1"></label>
+                    </div>
+                    <div class="button">
+                        <input type="radio" id="palette2" name="palette"/>
+                        <label class="image" style="background-image: url('frontend/images/palette2.png')" for="palette2"></label>
+                    </div>
+                    <div class="button">
+                        <input type="radio" id="palette3" name="palette"/>
+                        <label class="image" style="background-image: url('frontend/images/palette3.png')" for="palette3"></label>
+                    </div>
+                    <div class="button">
+                        <input type="radio" id="palette4" name="palette"/>
+                        <label class="image" style="background-image: url('frontend/images/palette4.png')" for="palette4"></label>
+                    </div>
+                    <div class="button">
+                        <input type="radio" id="palette5" name="palette"/>
+                        <label class="image" style="background-image: url('frontend/images/palette5.png')" for="palette5"></label>
+                    </div>
+                    <div class="button">
+                        <input type="radio" id="palette6" name="palette"/>
+                        <label class="image" style="background-image: url('frontend/images/palette6.png')" for="palette6"></label>
+                    </div>
+                    <div class="clear"></div>
+                </div>
+                <h2>Background</h2>
+                <div class= "indata">
+                    <div class="button">
+                        <input type="radio" id="mozaicBack" name="back"/>
+                        <label for="mozaicBack">Mozaique</label>
+                    </div>
+                    <div class="button">
+                        <input type="radio" id="starsBack" name="back"/>
+                        <label for="starsBack">Stars</label>
+                    </div>
+                    <div class="button">
+                        <input type="radio" id="noneBack" name="back"/>
+                        <label for="noneBack">None</label>
+                    </div>
+                    <div class="clear"></div>
+                </div>
+                <div id="selectLines">
+                <h2>Number of lines</h2>
+                    <div class= "indata">
+                        <div class= "indata">
+                                
+                            <select id="freqNum">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button  type="button" id="startPause" value="started">Pause</button>
+            <div id="logo">
+            </div>
         </div>
     </div>
-    <!-- bootstrap module -->
-    <script src="frontend/bootstrap/jquery-3.3.1.slim.min.js"></script>
-    <script src="frontend/bootstrap/js/bootstrap.min.js"></script>
     <!-- LedsChat modules -->
     <script src="socketio/socket.io.js"></script>
     <script src="js/web.js"></script>
     <script src="js/frontEnd.js"></script>
 
     <script>
+    
+        function uploadFile(file) 
+        {
+            document.getElementById('fileInput').value = '';
+            webrtc.send({cmd: 'fileStart', size: file.size, name: file.name});
 
-        var freqNumInput = document.querySelector('#freqNum');
-        var progressDiv = document.querySelector('#progressDiv');
-        var soundSetting = document.querySelector('#soundSetting');
-        var microOutputOn = document.getElementById('microOutputOn');
-        var microOutputOff = document.getElementById('microOutputOff');
-        
-        // Sources
-        
-        // Set micro as the source
-        document.getElementById('micro').onclick = () => {
-            webrtc.send({
-                cmd: 'microSource',
-                arg: 'start'
-            });
-        }
-
-        // Play microphone sound on the speakers
-        microOutput.onchange = () => {
-            if (microOutput.checked) {
-                webrtc.send({
-                    cmd: 'microOutput',
-                    arg: 'start'
-                }); 
-            } else {
-                webrtc.send({
-                    cmd: 'microOutput',
-                    arg: 'stop'
-                }); 
-            }
-        }
-
-        // Set audio file as the source
-        document.getElementById('fileGo').onclick = () => {
-            var fileInput = document.getElementById('fileInput').files[0];
-            if (fileInput != undefined){
-            progressDiv.style.display = 'block';
-            var progress = document.getElementById("progress")
-
-            document.querySelector('#fileSettings').style.visibility = 'hidden';
-            }
-            uploadFile(fileInput, () => {
-                
-                webrtc.send({
-                    cmd: 'fileEnd'
-                });
-            });
-        };
-        
-        
-        function uploadFile(file, callback) {
-
-            webrtc.send({
-                cmd: 'fileStart',
-                arg: file.size
-            });
-
-            var CHUNK_SIZE = 5120;
-            var offset = 0;
-            var fr = new FileReader();
-            fr.onload = function () {
-
-                webrtc.send({
-                    cmd: 'filePart',
-                    arg: fr.result
-                });
-
-                var offsetPercentage = 0;
-                offset += CHUNK_SIZE;
-                offsetPercentage += Math.round((offset * 100) / file.size);
-                console.log(offsetPercentage);
-
-
-                progress.setAttribute("aria-valuenow", offsetPercentage);
-                progress.style.width = offsetPercentage + "%";
-                if (offsetPercentage === 100) {
-                    progress.style.width ="0";
-                    progressDiv.style.display = 'none';
-                    document.querySelector('#fileSettings').style.visibility = 'visible';
-                }
-
+            let CHUNK_SIZE = 5120;
+            let offset = 0;
+            let fr = new FileReader();
+            
+            fr.onload = () => 
+            {
+                webrtc.send({cmd: 'filePart', arg: fr.result});
+                offset += fr.result.byteLength;
                 seek();
             };
-            fr.onerror = function () {
-                // Cannot read file... Do something, e.g. assume column size = 0.
+            fr.onerror = () => 
+            {
                 callback(0);
             };
             seek();
 
-            function seek() {
-                if (offset >= file.size) {
-                    // progress.setAttribute("aria-valuenow", 0);       
-                    callback(file.size);
+            function seek() 
+            {
+                if (offset >= file.size) 
                     return;
+                
 
-                }
-
-                var slice = file.slice(offset, offset + CHUNK_SIZE);
+                let slice = file.slice(offset, offset + CHUNK_SIZE);
                 fr.readAsArrayBuffer(slice);
             }
         }
 
 
-        // Play/pause button
-        soundSetting.onclick = () => {
-            soundSetting.classList.toggle("btn-success");
-            soundSetting.classList.toggle("btn-warning");
+        document.getElementById('fileInput').onchange = (e) => 
+        {
+            console.log('start');
+            let fileInput = e.target.files[0];
+            if (fileInput != undefined)
+                uploadFile(fileInput);
 
-            if (soundSetting.value === 'started') {
-                soundSetting.value = 'paused';
-                soundSetting.textContent = 'Play';
-                webrtc.send({
-                    cmd: 'soundSetting',
-                    arg: 'pause',
-                });
-            } else {
-                soundSetting.value = 'started';
-                soundSetting.textContent = 'Pause';
-                webrtc.send({
-                    cmd: 'soundSetting',
-                    arg: 'start'
-                });
-            }
-        }
-
-
-        // Effects
-
-        document.querySelector('#oscilloscope').onclick = () => {
-            freqNumInput.setAttribute("disabled", "");
-            
-            
-            webrtc.send({
-                cmd: 'effect',
-                arg: 'oscilloscope'
-            });
-        }
-
-        document.querySelector('#none').onclick = () => {
-            freqNumInput.setAttribute("disabled", "");
-
-            webrtc.send({
-                cmd: 'effect',
-                arg: 'noeffect'
-            });
-        }
-
-        document.querySelector('#wave').onclick = () => {
-            freqNumInput.setAttribute("disabled", "");
-            
-            webrtc.send({
-                cmd: 'effect',
-                arg: 'wave'
-            });
-        }
-
-        document.querySelector('#freqSpec').onclick = () => {
-            freqNumInput.removeAttribute('disabled');
-            
-            webrtc.send({
-                cmd: 'effect',
-                arg: 'freq'
-            });
-        }
-
-        // Effects parameters
-        document.querySelector('.mozaiqueBack').onclick = () => {
-                webrtc.send({
-                    cmd: 'effectback',
-                    arg: 'mozaique',
-                });
-            }
+        };
         
-        document.querySelector('.noeffectBack').onclick = () => {
-                webrtc.send({
-                    cmd: 'effectback',
-                    arg: 'noeffectback'
-                });
-            }
 
-        document.querySelector('.starsBack').onclick = () => {
-                webrtc.send({
-                    cmd: 'effectback',
-                    arg: 'starz'
-                });
-            }
+        
+        // Set micro as the source
+        document.getElementById('micro').onclick = () => 
+        {
+            webrtc.send({cmd: 'micro'});
+        }
+        
+        document.getElementById('file').onclick = () => 
+        {
+            webrtc.send({cmd: 'file'});
+        }
 
-        freqNum.onchange = () => {
-            var freqNumStr = freqNumInput.value;
+        // Play sound on the speakers
+        document.getElementById('mute').onchange = (e) => 
+        {
+            webrtc.send({cmd: 'mute', arg: e.target.checked}); 
+        }
+
+        
+        document.getElementById('freqNum').onchange = (e) => 
+        {
+            var freqNumStr = e.target.value;
             freqNum = parseInt(freqNumStr, 10);
-            webrtc.send({
-                cmd: 'freqNumber',
-                arg: freqNum
-            });
+            webrtc.send({cmd: 'freqNumber', arg: freqNum});
+        }
+        
+        document.getElementById('microId').onchange = (e) => 
+        {
+            var id = e.target.value;
+            webrtc.send({cmd: 'microId', arg: id});
+        }
+        
+        document.getElementById('outputId').onchange = (e) => 
+        {
+            var id = e.target.value;
+            webrtc.send({cmd: 'outputId', arg: id});
+        }
+        
+        
+        document.getElementById('startPause').onclick = (e) => 
+        {
+            
+            if(e.target.innerText == 'Pause')
+            {
+                e.target.innerText = 'Start';
+                webrtc.send({cmd: 'pause'});
+            }
+            else
+            {
+                e.target.innerText = 'Pause';
+                webrtc.send({cmd: 'start'});
+            }
         }
 
-        document.querySelector('.multicolor').onclick = () => {
+
+        function sendEffect(isLines, e)
+        {
+
+            webrtc.send({cmd: 'effect', arg: e.target.id});
+        }
+        
+        function sendBack(e)
+        {
+            webrtc.send({cmd: 'effectback',  arg: e.target.id});
+        }
+        
+        function sendColor(id)
+        {
+            webrtc.send({cmd: 'color',  arg: id});
+        }
+
+        document.getElementById('oscilloscope').onclick = sendEffect.bind(undefined, true);
+        document.getElementById('tiles').onclick        = sendEffect.bind(undefined, false);
+        document.getElementById('waves').onclick        = sendEffect.bind(undefined, false);
+        document.getElementById('frequency').onclick    = sendEffect.bind(undefined, true);
+
+        document.getElementById('mozaicBack').onclick = sendBack;
+        document.getElementById('noneBack').onclick   = sendBack;
+        document.getElementById('starsBack').onclick  = sendBack;
+        
+        document.getElementById('palette1').onclick = sendColor.bind(undefined, 0);
+        document.getElementById('palette2').onclick = sendColor.bind(undefined, 1);
+        document.getElementById('palette3').onclick = sendColor.bind(undefined, 2);
+        document.getElementById('palette4').onclick = sendColor.bind(undefined, 3);
+        document.getElementById('palette5').onclick = sendColor.bind(undefined, 4);
+        document.getElementById('palette6').onclick = sendColor.bind(undefined, 5);
+        
+        let timeout;
+        webrtc.onData((data) => {
+            
+            if(data.cmd == 'status')
+            {
+                clearTimeout(timeout);
                 
-            webrtc.send({
-                cmd: 'color',
-                arg: 'multi'
-            });
+                document.getElementById('wait').style.display = 'none';
+                document.getElementById('form').style.display = 'block';
+                
+                let p = data.params;
+                let d = data.devices;
+                
+                if(p.input.type == 'micro')
+                {
+                    document.getElementById('micro').checked = true;
+                    document.getElementById('selectMicro').style.display = 'block';
+                    document.getElementById('selectFile').style.display  = 'none';
+                    
+                    
+                }
+                else if(p.input.type == 'file')
+                {
+                    document.getElementById('file').checked = true;
+                    document.getElementById('selectMicro').style.display = 'none';
+                    document.getElementById('selectFile').style.display  = 'block';
+                }
+                
+                let inputs = '';
+                for(let i = 0; i < d.input.length; ++i)
+                {
+                    let selected = p.input.id == d.input[i].deviceId ? ' selected' : '';
+                    inputs += `<option value="${d.input[i].deviceId}"${selected}>${d.input[i].label}</option>`;
+                }
+                    
+                document.getElementById('microId').innerHTML  = inputs;
+                document.getElementById('fileInputText').innerText = p.input.file;
+                document.getElementById('mute').checked = p.output.muted;
+                document.getElementById('selectOutput').style.display = p.output.muted ? 'none' : 'block';
+                
+                let outputs = '';
+                for(let i = 0; i < d.output.length; ++i)
+                {
+                    let selected = p.output.id == d.output[i].deviceId ? ' selected' : '';
+                    outputs += `<option value="${d.output[i].deviceId}"${selected}>${d.output[i].label}</option>`;
+                }
+                        
+                document.getElementById('outputId').innerHTML  = outputs;
+                
+                document.getElementById(p.effect).checked = true;
+                document.getElementById('palette' + (p.ambience.color + 1)).checked = true;
+                document.getElementById(p.ambience.back).checked = true;
+                
+                document.getElementById('selectLines').style.display = p.effect == 'frequency' ? 'block' : 'none';   
+                
+                document.getElementById('freqNum').value = p.ambience.lines;
+                
+                document.getElementById('startPause').innerText = data.paused ? 'Start' : 'Pause'
+                
+                if(data.upload)
+                {
+                    document.getElementById('fileInputText').innerText = 'Uploading...';
+                    document.getElementById('upload').style.display = 'block';
+                    document.getElementById('progressBar').style.width = data.progress + '%';
+                }
+                else
+                    document.getElementById('upload').style.display = 'none';
+     
+                document.getElementById('fileInput').disabled = data.upload;
+            }
+            else if(data.cmd == 'upload')
+            {
+                document.getElementById('progressBar').style.width = data.progress + '%';
+                document.getElementById('upload').style.display = 'block';
+            }
+        });
+        
     
-        }
-
-        document.querySelector('.terracota').onclick = () => {
-                
-            webrtc.send({
-                cmd: 'color',
-                arg: 'terra'
-            });
+        function requestData()
+        {
+            webrtc.send({cmd:'hello'});
             
+            timeout = setTimeout(requestData, 3000);
         }
-
-        document.querySelector('.party').onclick = () => {
+        
+        requestData();
+        
                 
-            webrtc.send({
-                cmd: 'color',
-                arg: 'party'
-            });
-            
-        }
-
-
-        document.querySelector('.lounge').onclick = () => {
-                
-            webrtc.send({
-                cmd: 'color',
-                arg: 'lounge'
-            });
-            
-        }
-
-        document.querySelector('.sunrise').onclick = () => {
-                
-            webrtc.send({
-                cmd: 'color',
-                arg: 'sunrise'
-            });
-                
-        }
-        document.querySelector('.neonite').onclick = () => {
-                
-            webrtc.send({
-                cmd: 'color',
-                arg: 'neonite'
-            });
-                
-        }
     </script>
 </body>
 
