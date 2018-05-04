@@ -3,6 +3,7 @@
 	"name" : "Mosaic Sound",
 	"description": "this is the application to project sound visualization",
 	"icon":"icon.png",
+	"version" :"2.0",
 
 	"app" : 
 	{
